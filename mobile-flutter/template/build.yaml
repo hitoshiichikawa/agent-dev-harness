@@ -1,0 +1,15 @@
+targets:
+  $default:
+    builders:
+      riverpod_generator:
+        options:
+          provider_name_prefix: ""
+      freezed:
+        options:
+          copy_with: true
+          equal: true
+          to_string: true
+      json_serializable:
+        options:
+          explicit_to_json: true
+          field_rename: none

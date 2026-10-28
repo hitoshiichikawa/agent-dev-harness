@@ -1,0 +1,34 @@
+# golangci-lint v2 形式
+version: "2"
+run:
+  timeout: 3m
+linters:
+  default: standard
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+    - errorlint      # errors.Is/As を使わせる
+    - wrapcheck      # 外部パッケージのエラーをラップさせる
+    - gocritic
+    - revive
+    - noctx          # context なしの http リクエスト禁止
+    - bodyclose
+    - sqlclosecheck
+    - gosec
+    - nilerr
+    - prealloc
+    - unconvert
+    - misspell
+  exclusions:
+    paths:
+      - internal/generated
+    rules:
+      - path: _test\.go
+        linters: [gosec, wrapcheck]
+formatters:
+  enable:
+    - gofmt
+    - goimports

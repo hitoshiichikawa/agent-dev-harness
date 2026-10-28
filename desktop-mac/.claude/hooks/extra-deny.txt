@@ -1,0 +1,12 @@
+xcodebuild[^|;&]*archive
+xcodebuild[^|;&]*-exportArchive
+codesign
+notarytool
+stapler
+altool
+create-dmg
+hdiutil
+fastlane
+security[[:space:]]+(import|add-|delete-|set-)
+generate_keys
+sign_update

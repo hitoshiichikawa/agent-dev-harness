@@ -1,0 +1,13 @@
+*.xcodeproj/
+*.xcworkspace/
+build/
+.build/
+DerivedData/
+screenshots/
+*.dmg
+*.p12
+*.provisionprofile
+sparkle_private_key*
+.env*
+fastlane/report.xml
+fastlane/*.log

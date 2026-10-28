@@ -1,0 +1,11 @@
+node_modules/
+dist/
+cdk.out/
+api/bin/
+api/tmp/
+.env
+.env.*
+!.env.example
+e2e/screenshots/
+playwright-report/
+test-results/

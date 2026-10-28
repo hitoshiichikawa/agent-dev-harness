@@ -1,0 +1,7 @@
+<Window x:Class="MyApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ex="clr-namespace:MyApp.Features.Example"
+        Title="MyApp" Width="900" Height="600">
+  <ex:ExampleView DataContext="{Binding}" />
+</Window>

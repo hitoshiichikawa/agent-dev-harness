@@ -1,0 +1,5 @@
+goose[[:space:]]+(up|down|reset|redo)
+task[[:space:]]+migrate:(up|down|reset)
+docker[[:space:]]+push
+docker[[:space:]]+compose[[:space:]]+down[^|;&]*-v
+psql[^|;&]*(DROP|TRUNCATE|DELETE)

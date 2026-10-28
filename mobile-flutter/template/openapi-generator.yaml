@@ -1,0 +1,10 @@
+# openapi-generator-cli の設定。入力は web 側の契約ファイル。
+generatorName: dart-dio
+inputSpec: ../openapi/openapi.yaml      # モノレポ外なら git submodule かコピーしてパスを合わせる
+outputDir: lib/generated/api_client
+additionalProperties:
+  pubName: api_client
+  pubLibrary: api_client
+  serializationLibrary: json_serializable
+  useEnumExtension: true
+  nullableFields: true

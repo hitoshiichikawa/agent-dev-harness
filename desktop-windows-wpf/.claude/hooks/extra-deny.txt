@@ -1,0 +1,10 @@
+dotnet[[:space:]]+publish
+dotnet[[:space:]]+ef[[:space:]]+database
+dotnet[[:space:]]+ef[[:space:]]+migrations[[:space:]]+remove
+dotnet[[:space:]]+nuget[[:space:]]+push
+(^|[[:space:]/\\])vpk([[:space:]]|$)
+[Mm]ake[Aa]ppx
+[Ss]ign[Tt]ool
+msstore
+Add-AppxPackage
+Remove-AppxPackage

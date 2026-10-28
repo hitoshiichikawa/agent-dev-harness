@@ -1,0 +1,13 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+screenshots/
+*.pfx
+*.snk
+appsettings.Production.json
+Releases/
+*.msix
+*.msixbundle
+.env*

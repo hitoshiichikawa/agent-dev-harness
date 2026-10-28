@@ -1,0 +1,12 @@
+.dart_tool/
+build/
+.flutter-plugins*
+screenshots/
+test/failures/
+ios/Pods/
+android/key.properties
+**/*.keystore
+**/*.jks
+.env*
+# 生成コード（lib/generated, *.g.dart, *.freezed.dart）は意図的にコミットする。
+# `make gen-check` が「生成し忘れ」を git diff で検出するため。

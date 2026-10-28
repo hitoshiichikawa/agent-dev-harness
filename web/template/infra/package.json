@@ -1,0 +1,12 @@
+{
+  "name": "infra",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "biome check . && tsc --noEmit && cdk synth --quiet",
+    "synth": "cdk synth",
+    "diff": "cdk diff"
+  },
+  "dependencies": { "aws-cdk-lib": "^2", "constructs": "^10" },
+  "devDependencies": { "aws-cdk": "^2", "@biomejs/biome": "^2", "typescript": "^5", "tsx": "^4" }
+}

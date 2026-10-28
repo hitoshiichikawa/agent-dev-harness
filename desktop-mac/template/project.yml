@@ -1,0 +1,99 @@
+# XcodeGen。.xcodeproj はこれから生成する（git に入れない）。
+name: MyApp
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    DEVELOPMENT_TEAM: ""          # 書き換える
+    ENABLE_HARDENED_RUNTIME: YES
+
+# 3 つの configuration。署名と配布の差はここだけ。
+configs:
+  Debug: debug
+  Release-AppStore: release
+  Release-DeveloperID: release
+
+packages:
+  Domain:
+    path: Packages/Domain
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
+
+targets:
+  MyApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+        excludes: ["**/*.md"]
+    dependencies:
+      - package: Domain
+      - package: Sparkle
+    entitlements:
+      path: App/App.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.network.client: true     # Sparkle の更新確認用。不要なら外す
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: MyApp
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSHumanReadableCopyright: ""
+        # Sparkle（DeveloperID レーンのみ使う。AppStore レーンでは無視される）
+        SUFeedURL: https://example.com/appcast.xml
+        SUPublicEDKey: ""                            # generate_keys の公開鍵。秘密鍵はリポジトリに置かない
+        SUEnableInstallerLauncherService: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.MyApp
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+      configs:
+        Release-AppStore:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Apple Distribution"
+          PROVISIONING_PROFILE_SPECIFIER: "MyApp AppStore"
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: APPSTORE
+        Release-DeveloperID:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Developer ID Application"
+          PROVISIONING_PROFILE_SPECIFIER: ""
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEVELOPERID
+    preBuildScripts:
+      - name: SwiftLint
+        script: |
+          if command -v swiftlint >/dev/null; then swiftlint lint --quiet; fi
+        basedOnDependencyAnalysis: false
+
+  MyAppUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources: [AppUITests]
+    dependencies:
+      - target: MyApp
+
+schemes:
+  MyApp:
+    build:
+      targets:
+        MyApp: all
+        MyAppUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [MyAppUITests]
+    archive:
+      config: Release-DeveloperID

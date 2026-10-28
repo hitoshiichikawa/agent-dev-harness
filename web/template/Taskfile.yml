@@ -1,0 +1,97 @@
+# https://taskfile.dev — エージェントの唯一のエントリポイント
+version: "3"
+
+vars:
+  DB_URL: postgres://app:app@localhost:5432/app?sslmode=disable
+
+tasks:
+  dev:
+    desc: ローカル起動（api + postgres はコンテナ、frontend は vite dev）
+    cmds:
+      - docker compose up -d --wait
+      - cd frontend && pnpm dev
+
+  check:
+    desc: 完了条件。すべて通ること
+    cmds:
+      - task: check:api
+      - task: check:frontend
+      - task: check:infra
+      - task: check:gen
+
+  check:api:
+    dir: api
+    cmds:
+      - test -z "$(gofmt -l .)" || (echo "gofmt: unformatted files:" && gofmt -l . && exit 1)
+      - go vet ./...
+      - golangci-lint run ./...
+      - go test ./... -race -count=1
+
+  check:frontend:
+    dir: frontend
+    cmds:
+      - pnpm exec biome check .
+      - pnpm exec tsc --noEmit
+      - pnpm exec depcruise src --config .dependency-cruiser.cjs
+      - pnpm exec vitest run
+
+  check:infra:
+    dir: infra
+    cmds:
+      - pnpm exec biome check .
+      - pnpm exec tsc --noEmit
+      - pnpm exec cdk synth --quiet
+
+  check:gen:
+    desc: 生成コードがスキーマと一致しているか（差分があれば gen 忘れ）
+    cmds:
+      - task: gen
+      - git diff --exit-code -- api/internal/generated frontend/src/generated || (echo "generated code is stale: commit the output of 'task gen'" && exit 1)
+
+  gen:
+    desc: OpenAPI と sqlc から生成
+    cmds:
+      - cd api && oapi-codegen -config oapi-codegen.yaml ../openapi/openapi.yaml
+      - cd api && sqlc generate
+      - cd frontend && pnpm exec orval
+
+  test:
+    cmds:
+      - cd api && go test ./... -count=1
+      - cd frontend && pnpm exec vitest run
+
+  e2e:
+    dir: frontend
+    cmds:
+      - pnpm exec playwright test
+
+  migrate:new:
+    desc: goose マイグレーション雛形を作る（name=xxx）
+    dir: api
+    cmds:
+      - goose -dir db/migrations create {{.name}} sql
+
+  migrate:up:
+    desc: 人間が叩く。エージェントはフックでブロックされる
+    dir: api
+    cmds:
+      - goose -dir db/migrations postgres "{{.DB_URL}}" up
+
+  migrate:status:
+    dir: api
+    cmds:
+      - goose -dir db/migrations postgres "{{.DB_URL}}" status
+
+  db:psql:
+    cmds:
+      - docker compose exec postgres psql -U app -d app
+
+  build:api:
+    dir: api
+    cmds:
+      - CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/api ./cmd/api
+
+  build:frontend:
+    dir: frontend
+    cmds:
+      - pnpm build

@@ -1,0 +1,10 @@
+# oapi-codegen 設定。出力は internal/generated/api（触らない）
+package: api
+output: internal/generated/api/api.gen.go
+generate:
+  chi-server: true
+  models: true
+  strict-server: true
+  embedded-spec: true
+output-options:
+  skip-prune: false

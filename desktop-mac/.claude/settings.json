@@ -1,0 +1,60 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Edit", "Write", "Glob", "Grep",
+      "Bash(make:*)",
+      "Bash(xcodegen:*)",
+      "Bash(swift build:*)",
+      "Bash(swift test:*)",
+      "Bash(swift package:*)",
+      "Bash(swiftformat:*)",
+      "Bash(swiftlint:*)",
+      "Bash(xcodebuild build:*)",
+      "Bash(xcodebuild test:*)",
+      "Bash(xcodebuild -list:*)",
+      "Bash(xcodebuild -showsdks:*)",
+      "Bash(xcrun simctl:*)",
+      "Bash(screencapture:*)",
+      "Bash(open -a:*)",
+      "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git add:*)", "Bash(git commit:*)",
+      "Bash(git checkout -b:*)", "Bash(git switch:*)", "Bash(git stash:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git reset --hard:*)",
+      "Bash(xcodebuild archive:*)",
+      "Bash(xcodebuild -exportArchive:*)",
+      "Bash(codesign:*)",
+      "Bash(xcrun notarytool:*)",
+      "Bash(xcrun stapler:*)",
+      "Bash(xcrun altool:*)",
+      "Bash(create-dmg:*)",
+      "Bash(hdiutil:*)",
+      "Bash(fastlane:*)",
+      "Bash(bundle exec fastlane:*)",
+      "Bash(security:*)",
+      "Bash(sudo:*)",
+      "Read(**/*.p12)", "Read(**/*.mobileprovision)", "Read(**/*.provisionprofile)", "Read(**/*.cer)",
+      "Read(**/sparkle_private_key*)", "Read(.env)", "Read(.env.*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "EXTRA_DENY=$(cat .claude/hooks/extra-deny.txt 2>/dev/null) bash .claude/hooks/common/guard-bash.sh" }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [ { "type": "command", "command": "bash .claude/hooks/common/guard-edit.sh" } ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [ { "type": "command", "command": "bash .claude/hooks/post-edit.sh" } ]
+      }
+    ]
+  }
+}

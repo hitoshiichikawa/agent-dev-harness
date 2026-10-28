@@ -1,0 +1,41 @@
+{
+  "name": "frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check": "biome check . && tsc --noEmit && depcruise src --config .dependency-cruiser.cjs && vitest run",
+    "gen": "orval",
+    "test": "vitest run",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5",
+    "@tanstack/react-router": "^1",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-hook-form": "^7",
+    "@hookform/resolvers": "^5",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2",
+    "@playwright/test": "^1",
+    "@tanstack/router-plugin": "^1",
+    "@testing-library/react": "^16",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5",
+    "dependency-cruiser": "^17",
+    "jsdom": "^26",
+    "orval": "^7",
+    "tailwindcss": "^4",
+    "@tailwindcss/vite": "^4",
+    "typescript": "^5",
+    "vite": "^7",
+    "vitest": "^3"
+  },
+  "$comment": "バージョンは scaffold 時に pnpm が解決する。ここは意図のメモ。pnpm create vite で生成したものにこれらを追加する。"
+}

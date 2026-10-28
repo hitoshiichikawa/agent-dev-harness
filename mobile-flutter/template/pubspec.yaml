@@ -1,0 +1,41 @@
+# flutter create の生成物にこの dependencies / dev_dependencies をマージする。
+# バージョンは `flutter pub add` が解決するので、ここは意図のメモ。
+name: my_app
+description: generated from dev-harness/mobile-flutter
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.0.0
+  riverpod_annotation: ^3.0.0
+  go_router: ^16.0.0
+  dio: ^5.0.0
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.3.0
+  # 生成クライアント（openapi-generator dart-dio の出力をパスで参照）
+  api_client:
+    path: lib/generated/api_client
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  build_runner: ^2.4.0
+  riverpod_generator: ^3.0.0
+  riverpod_lint: ^3.0.0
+  custom_lint: ^0.7.0
+  freezed: ^3.0.0
+  json_serializable: ^6.9.0
+  very_good_analysis: ^9.0.0
+  mocktail: ^1.0.0
+
+flutter:
+  uses-material-design: true

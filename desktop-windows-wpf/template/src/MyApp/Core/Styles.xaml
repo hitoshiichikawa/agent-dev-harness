@@ -1,0 +1,6 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Fluent テーマの上に載せる共通スタイルだけ。画面固有のスタイルは Features 側 -->
+  <Thickness x:Key="PagePadding">16</Thickness>
+  <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+</ResourceDictionary>

@@ -1,0 +1,7 @@
+flutter[[:space:]]+build
+fastlane
+xcodebuild[[:space:]]+-exportArchive
+codesign
+xcrun[[:space:]]+notarytool
+keytool
+gradlew?[[:space:]]+(bundle|assemble)Release

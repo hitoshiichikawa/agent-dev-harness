@@ -1,0 +1,18 @@
+# 人間が叩く。エージェントはフックでブロックされる。
+default_platform(:ios)
+
+platform :ios do
+  desc "TestFlight に上げる"
+  lane :beta do
+    sh("flutter build ipa --release --export-options-plist=ios/ExportOptions.plist")
+    upload_to_testflight(ipa: "../build/ios/ipa/my_app.ipa", skip_waiting_for_build_processing: true)
+  end
+end
+
+platform :android do
+  desc "Play 内部テストに上げる"
+  lane :beta do
+    sh("flutter build appbundle --release")
+    upload_to_play_store(track: "internal", aab: "../build/app/outputs/bundle/release/app-release.aab")
+  end
+end

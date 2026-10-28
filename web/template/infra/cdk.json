@@ -1,0 +1,11 @@
+{
+  "app": "npx tsx bin/app.ts",
+  "context": {
+    "@aws-cdk/core:newStyleStackSynthesis": true,
+    "appName": "app",
+    "stages": {
+      "dev":  { "account": "000000000000", "region": "ap-northeast-1" },
+      "prod": { "account": "000000000000", "region": "ap-northeast-1", "domainName": "", "certificateArn": "" }
+    }
+  }
+}

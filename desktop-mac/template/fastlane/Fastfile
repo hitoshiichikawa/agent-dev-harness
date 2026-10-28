@@ -1,0 +1,33 @@
+# 人間が叩く。エージェントはフックでブロックされる。
+default_platform(:mac)
+
+platform :mac do
+  desc "App Store 提出（Release-AppStore configuration）"
+  lane :appstore do
+    sh("cd .. && xcodegen generate")
+    build_mac_app(
+      project: "MyApp.xcodeproj",
+      scheme: "MyApp",
+      configuration: "Release-AppStore",
+      export_method: "app-store",
+      output_directory: "build/appstore"
+    )
+    upload_to_app_store(pkg: "build/appstore/MyApp.pkg", skip_screenshots: true, skip_metadata: true)
+  end
+
+  desc "Developer ID 署名 + notarize + DMG + Sparkle appcast"
+  lane :dmg do
+    sh("cd .. && xcodegen generate")
+    build_mac_app(
+      project: "MyApp.xcodeproj",
+      scheme: "MyApp",
+      configuration: "Release-DeveloperID",
+      export_method: "developer-id",
+      output_directory: "build/dmg"
+    )
+    notarize(package: "build/dmg/MyApp.app", bundle_id: "com.example.MyApp", use_notarytool: true)
+    sh("create-dmg --overwrite ../build/dmg/MyApp.app ../build/dmg")
+    # Sparkle: generate_appcast は Sparkle の bin から。秘密鍵は Keychain に置き、リポジトリには入れない
+    sh("$(find ~/Library/Developer/Xcode/DerivedData -name generate_appcast -type f | head -1) ../build/dmg")
+  end
+end

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- MSIX（Store）と Velopack（exe）の 2 レーン。Release-* 構成で切り替える -->
+    <Configurations>Debug;Release;Release-Store;Release-Velopack</Configurations>
+    <EnableMsixTooling Condition="'$(Configuration)' == 'Release-Store'">true</EnableMsixTooling>
+    <DefineConstants Condition="'$(Configuration)' == 'Release-Store'">$(DefineConstants);STORE</DefineConstants>
+    <DefineConstants Condition="'$(Configuration)' == 'Release-Velopack'">$(DefineConstants);VELOPACK</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyApp.Domain\MyApp.Domain.csproj" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Velopack" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
