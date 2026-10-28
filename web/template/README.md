@@ -1,6 +1,6 @@
 # <project name>
 
-web パターン（dev-harness/web）から生成。設計判断は dev-harness/web/README.md を参照。
+web パターン（agent-dev-harness/web）から生成。設計判断は agent-dev-harness/web/README.md を参照。
 
 ## 起動
 

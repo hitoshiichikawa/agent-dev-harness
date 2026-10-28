@@ -56,7 +56,7 @@ template/
 `template/` は設定ファイルと構造を持つ。アプリ本体は以下で生成してから、template の設定で上書きする。
 
 ```bash
-cp -r dev-harness/web/template my-app && cd my-app
+cp -r agent-dev-harness/web/template my-app && cd my-app
 
 # frontend
 cd frontend && pnpm create vite . --template react-ts && pnpm add @tanstack/react-router @tanstack/react-query zod \

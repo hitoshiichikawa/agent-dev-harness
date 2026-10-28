@@ -47,11 +47,11 @@ Clean Architecture のフル構成（UseCase 層、Entity/Model の二重化）�
 ```bash
 flutter create --org com.example --platforms ios,android --empty my_app && cd my_app
 # template の設定で上書き
-cp -r dev-harness/mobile-flutter/template/* .
-cp dev-harness/mobile-flutter/CLAUDE.md .
-cp -r dev-harness/mobile-flutter/.claude .
-cp -r dev-harness/common/.claude/hooks .claude/hooks/common
-cp dev-harness/common/CLAUDE.md .claude/CLAUDE.common.md
+cp -r agent-dev-harness/mobile-flutter/template/* .
+cp agent-dev-harness/mobile-flutter/CLAUDE.md .
+cp -r agent-dev-harness/mobile-flutter/.claude .
+cp -r agent-dev-harness/common/.claude/hooks .claude/hooks/common
+cp agent-dev-harness/common/CLAUDE.md .claude/CLAUDE.common.md
 # pubspec.yaml は template の dependencies を flutter create 生成物にマージする
 flutter pub get
 make gen && make check

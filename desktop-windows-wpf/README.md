@@ -53,9 +53,9 @@ template/
 
 ```powershell
 # Windows 上で
-cp -r dev-harness/desktop-windows-wpf/template MyApp; cd MyApp
-cp dev-harness/desktop-windows-wpf/CLAUDE.md .; cp -r dev-harness/desktop-windows-wpf/.claude .
-cp -r dev-harness/common/.claude/hooks .claude/hooks/common; cp dev-harness/common/CLAUDE.md .claude/CLAUDE.common.md
+cp -r agent-dev-harness/desktop-windows-wpf/template MyApp; cd MyApp
+cp agent-dev-harness/desktop-windows-wpf/CLAUDE.md .; cp -r agent-dev-harness/desktop-windows-wpf/.claude .
+cp -r agent-dev-harness/common/.claude/hooks .claude/hooks/common; cp agent-dev-harness/common/CLAUDE.md .claude/CLAUDE.common.md
 # プロジェクト名を MyApp から置換（ファイル名・名前空間・.sln）
 dotnet tool restore
 dotnet restore

@@ -48,9 +48,9 @@ template/
 ## scaffold 手順
 
 ```bash
-cp -r dev-harness/desktop-mac/template MyApp && cd MyApp
-cp dev-harness/desktop-mac/CLAUDE.md . && cp -r dev-harness/desktop-mac/.claude . \
-  && cp -r dev-harness/common/.claude/hooks .claude/hooks/common && cp dev-harness/common/CLAUDE.md .claude/CLAUDE.common.md
+cp -r agent-dev-harness/desktop-mac/template MyApp && cd MyApp
+cp agent-dev-harness/desktop-mac/CLAUDE.md . && cp -r agent-dev-harness/desktop-mac/.claude . \
+  && cp -r agent-dev-harness/common/.claude/hooks .claude/hooks/common && cp agent-dev-harness/common/CLAUDE.md .claude/CLAUDE.common.md
 brew install xcodegen swiftformat swiftlint
 # project.yml の name / bundleIdPrefix / DEVELOPMENT_TEAM を書き換える
 make gen      # xcodegen generate → MyApp.xcodeproj
