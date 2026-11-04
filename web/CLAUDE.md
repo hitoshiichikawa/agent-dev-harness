@@ -33,6 +33,8 @@ db/queries/                sqlc 入力。<domain>.sql
 - handler は OpenAPI 生成の `ServerInterface` を実装する。リクエストの検証は生成コード側のミドルウェアに任せ、handler で再検証しない
 - service にビジネスロジック。handler は変換と呼び出しだけ、repo は sqlc の薄いラッパ
 - エラーは `fmt.Errorf("...: %w", err)` でラップ。HTTP ステータスへの変換は handler の 1 箇所で
+- 権限（どのロールがどの操作を呼べるか）はルーター登録時に宣言し、ミドルウェアが一括で検査する。handler 本文でロールを見ない
+- 時刻の変換は `internal/platform/clock` だけ。`time.Now().Add(9*time.Hour)` のような手変換を書かない
 - context は第一引数で必ず渡す。goroutine を起動するときは `errgroup` を使い、裸の `go` は書かない
 - テストは `testcontainers-go` で実 Postgres を起動する。DB をモックしない
 - 設定は環境変数のみ（`internal/platform/config.go`）。デフォルト値はローカル開発用
@@ -53,6 +55,9 @@ components/ui/      shadcn/ui。追加は `pnpm dlx shadcn add <name>`
 - クライアント状態は `useState` で足りなければ Context。Zustand 等は入れない
 - フォームは react-hook-form + zod。スキーマは `features/<domain>/schema.ts`
 - スタイルは Tailwind のみ。CSS ファイルを増やさない
+- 判定（しきい値超過・権限の可否・集計）はサーバーが行い、応答に結果を含める。フロントで再計算・再判定しない
+- 列挙値は `generated/` の型（OpenAPI の enum）を使い、`'1'` や `'active'` の文字列リテラルで比較しない
+- 時刻は API では RFC 3339 UTC。表示用の整形は `lib/time.ts` だけに置く
 
 ### 契約（`openapi/openapi.yaml`）
 

@@ -77,3 +77,8 @@ OpenAPI の契約は web プロジェクトの `openapi/openapi.yaml` を参照�
 - `BuildContext` を async の後で使う → `if (!context.mounted) return;`
 - 画面遷移を Page にハードコード → `context.go('/path')` は Page でよいが、ルート定義は `app/router.dart` のみ
 - 例外を `catch (e) {}` で握る → `AsyncValue.guard` で state に乗せる
+- 「乗車前 / 乗車後」のような区分を `'before'` / `'乗車前'` / `'降車後'` と 3 通りの文字列で持ち、画面ごとに三項演算子で変換する → enum 1 つと拡張メソッド
+- サーバーの `YYYYMMDDHHmmss` を画面ごとに `substring` で読み、片方は JST 固定・片方は端末ローカルとして解釈する → `core/time_fmt.dart` に解析を 1 つ
+- 本体の Web から写した文字数上限や点検項目を画面ファイルに直書きする → `core/rules.dart` に `// SYNC:` 付きで置き、テストを書く
+- 位置・写真・健全性で「溜めて後で送る」を別々に実装する → キュー機構は 1 つ
+- MethodChannel のメソッド名やイベントの `type` を Dart / Swift / Kotlin にそれぞれ文字列で書く → 1 箇所の表を正にして同じコミットで直す
