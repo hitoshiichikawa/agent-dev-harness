@@ -6,6 +6,7 @@
 | `.claude/settings.json` | 権限の許可/拒否とフック定義の基底。各パターンの settings.json はこれを含んだ完全版 |
 | `.claude/hooks/guard-bash.sh` | Bash 実行前に破壊的・本番向けコマンドをブロック。パターン固有の追加は `EXTRA_DENY` 環境変数で渡す |
 | `.claude/hooks/guard-edit.sh` | 生成コード・秘密情報・ロックファイル・`.xcodeproj` への直接編集をブロック |
+| `brownfield.md` | 既存システムの隣に作るときの評価手順（コピー・レイヤ違反・時刻変換の測り方）と、新しいコードに課す「唯一の定義場所」の規約 |
 
 ## 使い方
 

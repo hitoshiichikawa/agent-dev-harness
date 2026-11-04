@@ -41,6 +41,20 @@ lib/generated/               openapi-generator 出力。触らない
 - `async` の後に `context` を使うときは `context.mounted` を確認
 - 文字列は `l10n` に出す（雛形では `AppLocalizations` 未導入なら定数ファイル）
 
+## 唯一の定義場所（このパターンでの置き場所）
+
+| 概念 | 場所 |
+|---|---|
+| 列挙値（種別・状態） | 生成クライアントの enum。無いものは `core/` の `enum`。画面表記はその enum の拡張 |
+| 時刻の解析・整形 | `core/time_fmt.dart`。サーバーの文字列形式はここだけが知る |
+| 他システムに合わせる検証ルール・項目一覧 | `core/rules.dart`。`// SYNC:` でコピー元を記し、テストを書く。画面は呼ぶだけ |
+| 永続化のキー | `core/storage/` の `static const`。`SharedPreferences` を外に出さない。SQLite はスキーマ変更ごとに `version` と `onUpgrade` |
+| ネイティブ連携（MethodChannel / EventChannel） | `core/native/` 先頭の表（メソッド名・イベント名・キー・iOS/Android の有無）。変更は Dart・Swift・Kotlin を同じコミットで |
+| オフライン送信 | 1 つのキュー機構。「溜めて後で送る」データを足すときに再送処理を新設しない |
+
+- 判定（超過・警告の要否）はサーバーの応答に含まれる値を表示する。画面で速度としきい値を比べない
+- ライセンス上の理由で版を固定する依存は `^` を付けず完全一致で書き、理由をコメントに残す
+
 ## 契約
 
 - API の変更は web 側の `openapi/openapi.yaml` が正。Flutter 側で型を手書きしない
