@@ -65,6 +65,7 @@ OpenAPI の契約は web プロジェクトの `openapi/openapi.yaml` を参照�
 |---|---|
 | 編集のたび（PostToolUse フック） | `dart format` → `dart analyze`（そのファイル） |
 | `make check`（完了条件） | format 差分なし、`flutter analyze`、`flutter test`（golden 含む）、生成コードの鮮度 |
+| 終了時（Stop フック） | ファイルを編集したのに `make check` が通っていなければ、終了を止めて `make check` を促す |
 | `openapi.yaml` 変更時 | `make gen` → 生成コードの差分 → analyze で壊れを検出 |
 | UI 変更時 | golden テストを更新（`make golden`）して差分を目視。シミュレータでのスクリーンショットは完了時のみ（ビルドが重い） |
 | リリース | `flutter build` の `--release`、署名、ストア提出はフックでブロック。人間が fastlane を叩く |

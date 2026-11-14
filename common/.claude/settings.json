@@ -48,6 +48,21 @@
           { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-edit.sh\" || exit 2" }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/check-gate.sh\" mark" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/check-gate.sh\" gate || exit 1" }
+        ]
+      }
     ]
   }
 }

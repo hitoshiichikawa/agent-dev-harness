@@ -5,7 +5,9 @@ DOMAIN   := src/MyApp.Domain/MyApp.Domain.csproj
 
 .PHONY: check format format-check build test test-domain run migrate screenshot clean
 
+# 全部通ったら「この中身で check が通った」と記録する。終了時の門番（check-gate.sh）がこれを見る
 check: format-check build test
+	@test ! -f .claude/hooks/common/check-gate.sh || bash .claude/hooks/common/check-gate.sh record
 
 format:
 	dotnet format $(SLN)

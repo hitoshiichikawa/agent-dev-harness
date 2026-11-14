@@ -6,7 +6,9 @@ DERIVED  := build/DerivedData
 
 .PHONY: check gen build run test test-domain format format-check lint screenshot clean
 
+# 全部通ったら「この中身で check が通った」と記録する。終了時の門番（check-gate.sh）がこれを見る
 check: format-check lint test-domain test
+	@test ! -f .claude/hooks/common/check-gate.sh || bash .claude/hooks/common/check-gate.sh record
 
 gen:
 	xcodegen generate

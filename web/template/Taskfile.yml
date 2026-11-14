@@ -18,6 +18,8 @@ tasks:
       - task: check:frontend
       - task: check:infra
       - task: check:gen
+      # ここまで通ったら「この中身で check が通った」と記録する。終了時の門番（check-gate.sh）がこれを見る
+      - test ! -f .claude/hooks/common/check-gate.sh || bash .claude/hooks/common/check-gate.sh record
 
   check:api:
     dir: api
