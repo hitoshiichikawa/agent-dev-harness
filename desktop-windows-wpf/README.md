@@ -70,6 +70,7 @@ make check
 |---|---|
 | 編集のたび（PostToolUse フック） | `.cs` → `dotnet format` + そのプロジェクトの `dotnet build`（analyzer が警告=エラーで落とす）。`.xaml` → `dotnet build` |
 | `make check`（完了条件） | format 差分なし、`dotnet build -warnaserror`、`dotnet test` |
+| 終了時（Stop フック） | ファイルを編集したのに `make check` が通っていなければ、終了を止めて `make check` を促す |
 | モデル変更時 | `make migrate name=Xxx` で EF マイグレーション生成 → 差分を人間がレビュー。適用はアプリ起動時に `Migrate()` |
 | UI 変更時 | `make run` で起動 → スクリーンショット |
 | リリース | `dotnet publish -c Release`、MSIX パッケージング、署名、Velopack の `vpk pack`、Store 提出はフックでブロック |

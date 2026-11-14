@@ -47,16 +47,17 @@ assemble() { # $1=パターン $2=出力先
   hook_commands "$2" PreToolUse Bash >"$2/.hooks-PreToolUse-Bash"
   hook_commands "$2" PreToolUse "$EDIT_MATCHER" >"$2/.hooks-PreToolUse-Edit"
   hook_commands "$2" PostToolUse "$EDIT_MATCHER" >"$2/.hooks-PostToolUse-Edit"
+  hook_commands "$2" Stop "" >"$2/.hooks-Stop-All"
 }
 
-hook_commands() { # $1=プロジェクト $2=イベント $3=matcher
-  jq -r --arg e "$2" --arg m "$3" '.hooks[$e][]? | select(.matcher == $m) | .hooks[].command' "$1/.claude/settings.json"
+hook_commands() { # $1=プロジェクト $2=イベント $3=matcher（matcher を持たないイベントは空文字）
+  jq -r --arg e "$2" --arg m "$3" '.hooks[$e][]? | select((.matcher // "") == $m) | .hooks[].command' "$1/.claude/settings.json"
 }
 
 # 標準入力のフック入力を、その matcher に登録された全フックへ渡して実行する。
 # Claude Code と同じく、1 つでも終了コード 2 を返せばブロック（2 を返す）。
 # stdout はそのまま、stderr は $WORK/stderr へ。
-run_hook() { # $1=プロジェクト $2=イベント $3=Bash|Edit
+run_hook() { # $1=プロジェクト $2=イベント $3=Bash|Edit|All
   local list="$1/.hooks-$2-$3" input cmd rc worst=0
   : >"$WORK/stderr"
   [ -s "$list" ] || { echo "no hook for $2 [$3] in $1" >"$WORK/stderr"; return 99; }
@@ -158,6 +159,91 @@ fail_closed_cases() {
   expect_rc allow $? "extra-deny.txt が CRLF でも無関係なコマンドは通る"
 }
 
+# check の門番（check-gate.sh）。変更したのに check を通していないまま終わるのを止めること。
+stop_input() { printf '%s' '{"hook_event_name": "Stop", "stop_hook_active": false}'; }
+scratch_git() { git -c user.name=harness-test -c user.email=harness-test@example.invalid -c commit.gpgsign=false -c core.hooksPath=/dev/null "$@"; }
+
+# 門番の判定を確かめる。stop = 終了を止める / pass = 黙って通す / warn = 通すが利用者に警告を出す
+# 止める合図は JSON（decision: block）で、終了コードは常に 0 のはず
+gate_expect() { # $1=stop|pass|warn $2=プロジェクト $3=説明
+  local out rc got
+  out="$(stop_input | run_hook "$2" Stop All)"
+  rc=$?
+  if [ "$rc" != 0 ]; then got="rc=$rc"
+  elif [ -z "$out" ]; then got=pass
+  elif printf '%s' "$out" | jq -e '.decision == "block" and (.reason | length > 0)' >/dev/null 2>&1; then got=stop
+  elif printf '%s' "$out" | jq -e '.systemMessage | length > 0' >/dev/null 2>&1; then got=warn
+  else got="unexpected output"; fi
+  if [ "$got" = "$1" ]; then ok; else ng "gate, $3: expected $1, got $got: $out"; fi
+}
+
+gate_cases() {
+  local p proj rc
+  for p in $ALL_PATTERNS; do
+    # git リポジトリでなければ何もしない
+    proj="$BASE/$p"
+    : >"$proj/notes.md"
+    edit_input "$proj/notes.md" | run_hook "$proj" PostToolUse Edit >/dev/null
+    gate_expect pass "$proj" "$p: git リポジトリでない"
+
+    proj="$BASE/gate-$p"
+    cp -R "$BASE/$p" "$proj"
+    (cd "$proj" && scratch_git init -q && printf 'one\n' >notes.md && printf 'x\n' >"日本語 の名前.md" &&
+      scratch_git add -A && scratch_git commit -q -m init) >/dev/null 2>"$WORK/stderr" ||
+      { ng "gate, $p: 試験用リポジトリを作れない"; continue; }
+
+    gate_expect pass "$proj" "$p: 何も編集していない"
+
+    # エージェントが編集した（PostToolUse が印を付ける）→ check を通すまで終われない
+    printf 'two\n' >>"$proj/notes.md"
+    edit_input "$proj/notes.md" | run_hook "$proj" PostToolUse Edit >/dev/null
+    gate_expect stop "$proj" "$p: 編集したまま終わろうとした"
+
+    # 同じ中身で 2 回目は通す。利用者への警告を 1 回だけ出す
+    gate_expect warn "$proj" "$p: 同じ中身で 2 回目"
+    gate_expect pass "$proj" "$p: 同じ中身で 3 回目"
+
+    # 中身が変われば、また止める（ファイル名に空白や日本語があっても拾う）
+    printf 'y\n' >>"$proj/日本語 の名前.md"
+    gate_expect stop "$proj" "$p: さらに変更して終わろうとした"
+
+    # check が通った（check コマンドの最後が record を呼ぶ。プロジェクトルートから、環境変数なしで）
+    (cd "$proj" && PATH="$SHIM:$PATH" bash .claude/hooks/common/check-gate.sh record)
+    gate_expect pass "$proj" "$p: check が通った後"
+
+    # コミットしても中身は同じなので通る
+    edit_input "$proj/notes.md" | run_hook "$proj" PostToolUse Edit >/dev/null
+    (cd "$proj" && scratch_git add -A && scratch_git commit -q -m change) >/dev/null 2>&1
+    gate_expect pass "$proj" "$p: check の後にコミットしただけ"
+
+    # 未追跡のファイルを足しても止める
+    edit_input "$proj/notes.md" | run_hook "$proj" PostToolUse Edit >/dev/null
+    printf 'new\n' >"$proj/added.md"
+    gate_expect stop "$proj" "$p: 未追跡ファイルを足して終わろうとした"
+
+    # 門番が壊れているとき・無いときは、終了を止めない（終了コード 2 を返さず、block も出さない）
+    printf '#!/usr/bin/env bash\nif then (\n' >"$proj/.claude/hooks/common/check-gate.sh" # 構文エラー（bash は 2 を返す）
+    stop_input | run_hook "$proj" Stop All >/dev/null
+    rc=$?
+    if [ "$rc" != 0 ] && [ "$rc" != 2 ]; then ok; else ng "gate, $p: 壊れた門番は止めずにエラーを返すはず (rc=$rc)"; fi
+    rm "$proj/.claude/hooks/common/check-gate.sh"
+    stop_input | run_hook "$proj" Stop All >/dev/null
+    rc=$?
+    if [ "$rc" != 0 ] && [ "$rc" != 2 ]; then ok; else ng "gate, $p: 門番が無いときは止めずにエラーを返すはず (rc=$rc)"; fi
+  done
+}
+
+# 各パターンの check コマンドが「通った」の記録を呼び、門番の案内がそのコマンド名を指していること
+template_cases() {
+  local p file label
+  for p in web mobile-flutter desktop-mac desktop-windows-wpf; do
+    if [ "$p" = web ]; then file="$ROOT/$p/template/Taskfile.yml" label="task check"; else file="$ROOT/$p/template/Makefile" label="make check"; fi
+    : >"$WORK/stderr"
+    if grep -q 'check-gate\.sh record' "$file"; then ok; else ng "template, $p: check が check-gate.sh record を呼んでいない"; fi
+    if grep -Fq "gate '$label'" "$BASE/$p/.hooks-Stop-All"; then ok; else ng "template, $p: Stop フックの案内が '$label' になっていない"; fi
+  done
+}
+
 # settings.json のフック呼び出しが、組み立て後のプロジェクトで実在するスクリプトを指していること
 settings_cases() {
   local p proj cmds cmd script missing
@@ -209,6 +295,8 @@ run_all() { # $1=試す bash のパス
   guard_cases edit "$CASES/guard-edit.txt"
   post_edit_cases "$CASES/post-edit.txt"
   fail_closed_cases
+  gate_cases
+  template_cases
   echo "   $((PASS - before)) ok"
 }
 

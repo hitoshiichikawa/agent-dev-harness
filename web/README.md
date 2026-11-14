@@ -79,6 +79,7 @@ task gen && task check
 |---|---|
 | 編集のたび（PostToolUse フック） | `.go` → `gofmt -l` + `go vet`、`.ts/.tsx` → `biome check` |
 | `task check`（完了条件） | golangci-lint、go test、tsc、biome、dependency-cruiser、vitest、`cdk synth` |
+| 終了時（Stop フック） | ファイルを編集したのに `task check` が通っていなければ、終了を止めて `task check` を促す |
 | `openapi.yaml` / `db/queries/*.sql` を変えたら | `task gen` → 生成コードの差分が出る → 両側の型チェックで壊れを検出 |
 | UI 変更時 | `task dev` で起動 → Playwright またはブラウザでスクリーンショット |
 | DB スキーマ変更 | `task migrate:new` で SQL を生成 → 人間がレビュー → `task migrate:up` は人間が叩く |

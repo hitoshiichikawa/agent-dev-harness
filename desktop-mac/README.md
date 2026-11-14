@@ -63,6 +63,7 @@ make check
 |---|---|
 | 編集のたび（PostToolUse フック） | `swiftformat` → `swiftlint lint`（そのファイル） |
 | `make check`（完了条件） | format 差分なし、swiftlint 警告ゼロ、`swift test`（Domain）、`xcodebuild build test`（App） |
+| 終了時（Stop フック） | ファイルを編集したのに `make check` が通っていなければ、終了を止めて `make check` を促す |
 | `project.yml` 変更時 | `make gen` で `.xcodeproj` 再生成（PostToolUse が自動で呼ぶ） |
 | UI 変更時 | `make run` で起動 → スクリーンショットを取って報告 |
 | リリース | archive・署名・notarization・DMG 作成・App Store 提出はフックでブロック。人間が `fastlane` を叩く |

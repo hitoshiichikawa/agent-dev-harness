@@ -1,7 +1,9 @@
 # エージェントのエントリポイント
 .PHONY: check gen test golden run screenshot format analyze
 
+# 全部通ったら「この中身で check が通った」と記録する。終了時の門番（check-gate.sh）がこれを見る
 check: format-check analyze test gen-check
+	@test ! -f .claude/hooks/common/check-gate.sh || bash .claude/hooks/common/check-gate.sh record
 
 format:
 	dart format lib test
