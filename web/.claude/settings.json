@@ -54,6 +54,7 @@
       "Bash(sudo:*)",
       "Read(.env)",
       "Read(.env.*)",
+      "Read(!.env.example)",
       "Read(**/*.pem)",
       "Read(**/*.p12)"
     ]
@@ -65,14 +66,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "EXTRA_DENY=$(cat .claude/hooks/extra-deny.txt 2>/dev/null) bash .claude/hooks/common/guard-bash.sh"
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-bash.sh\" || exit 2"
           }
         ]
       },
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "bash .claude/hooks/common/guard-edit.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-edit.sh\" || exit 2" }
         ]
       }
     ],
@@ -80,7 +81,7 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "bash .claude/hooks/post-edit.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit.sh\"" }
         ]
       }
     ]

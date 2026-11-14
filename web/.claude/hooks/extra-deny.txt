@@ -1,4 +1,4 @@
-goose[[:space:]]+(up|down|reset|redo)
+goose[[:space:]]+([^|;&]*[[:space:]])?(up|up-by-one|up-to|down|down-to|reset|redo)([[:space:]]|$)
 task[[:space:]]+migrate:(up|down|reset)
 docker[[:space:]]+push
 docker[[:space:]]+compose[[:space:]]+down[^|;&]*-v

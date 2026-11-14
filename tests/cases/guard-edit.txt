@@ -1,0 +1,54 @@
+# guard-edit.sh / guard-edit-wpf.sh（ファイル編集前のガード）の試験表
+#
+# 書式：  期待  パターン  パス
+#   期待     block = 止まる（終了コード 2） / allow = 通る（終了コード 0）
+#   パターン common / web / mobile-flutter / desktop-mac / desktop-windows-wpf / all（5 つ全部）
+#   パス     プロジェクトルートからの相対パス（試験時に絶対パスへ直して渡す）
+
+# --- 秘密情報 ---
+block all .env
+block all .env.local
+block all .env.production
+block all frontend/.env
+block all frontend/.env.development.local
+allow all .env.example
+allow all frontend/.env.example
+block all certs/dev.pem
+block all ios/dist.p12
+block all android/app/release.keystore
+block all ios/profile.mobileprovision
+block all .ssh/id_ed25519
+
+# --- 生成コード ---
+block all api/internal/generated/api/api.gen.go
+block all frontend/src/generated/client.ts
+block all lib/generated/api.dart
+block all lib/features/example/example_notifier.g.dart
+block all lib/features/example/example.freezed.dart
+block all MyApp.xcodeproj/project.pbxproj
+
+# --- ロックファイル ---
+block all pnpm-lock.yaml
+block all frontend/package-lock.json
+block all api/go.sum
+block all pubspec.lock
+block all Package.resolved
+
+# --- 普通のファイル ---
+allow all README.md
+allow all CLAUDE.md
+allow all api/internal/example/service.go
+allow all frontend/src/features/example/schema.ts
+allow all frontend/package.json
+allow all api/go.mod
+allow all pubspec.yaml
+allow all project.yml
+allow all openapi/openapi.yaml
+allow all docs/environment.md
+
+# --- desktop-windows-wpf：EF Core の Migrations ---
+block desktop-windows-wpf src/MyApp.Domain/Data/Migrations/20260101000000_Init.cs
+block desktop-windows-wpf src/MyApp.Domain/Data/Migrations/AppDbContextModelSnapshot.cs
+allow desktop-windows-wpf src/MyApp.Domain/Models/Example.cs
+allow desktop-windows-wpf src/MyApp.Domain/Data/AppDbContext.cs
+allow web src/MyApp.Domain/Data/Migrations/20260101000000_Init.cs

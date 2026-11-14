@@ -27,6 +27,7 @@
       "Bash(sudo:*)",
       "Read(.env)",
       "Read(.env.*)",
+      "Read(!.env.example)",
       "Read(**/*.pem)",
       "Read(**/*.p12)",
       "Read(**/id_rsa)",
@@ -38,13 +39,13 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "bash .claude/hooks/common/guard-bash.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-bash.sh\" || exit 2" }
         ]
       },
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "bash .claude/hooks/common/guard-edit.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-edit.sh\" || exit 2" }
         ]
       }
     ]

@@ -34,7 +34,7 @@
       "Bash(security:*)",
       "Bash(sudo:*)",
       "Read(**/*.p12)", "Read(**/*.mobileprovision)", "Read(**/*.provisionprofile)", "Read(**/*.cer)",
-      "Read(**/sparkle_private_key*)", "Read(.env)", "Read(.env.*)"
+      "Read(**/sparkle_private_key*)", "Read(.env)", "Read(.env.*)", "Read(!.env.example)"
     ]
   },
   "hooks": {
@@ -42,18 +42,18 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "EXTRA_DENY=$(cat .claude/hooks/extra-deny.txt 2>/dev/null) bash .claude/hooks/common/guard-bash.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-bash.sh\" || exit 2" }
         ]
       },
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": "bash .claude/hooks/common/guard-edit.sh" } ]
+        "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-edit.sh\" || exit 2" } ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": "bash .claude/hooks/post-edit.sh" } ]
+        "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit.sh\"" } ]
       }
     ]
   }
