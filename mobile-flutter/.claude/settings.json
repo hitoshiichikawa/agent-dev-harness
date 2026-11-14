@@ -29,7 +29,7 @@
       "Bash(xcodebuild -exportArchive:*)",
       "Bash(codesign:*)",
       "Bash(sudo:*)",
-      "Read(.env)", "Read(.env.*)",
+      "Read(.env)", "Read(.env.*)", "Read(!.env.example)",
       "Read(**/*.keystore)", "Read(**/*.jks)", "Read(**/*.p12)", "Read(**/*.mobileprovision)",
       "Read(**/key.properties)", "Read(**/GoogleService-Info.plist)", "Read(**/google-services.json)"
     ]
@@ -39,18 +39,18 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "EXTRA_DENY=$(cat .claude/hooks/extra-deny.txt 2>/dev/null) bash .claude/hooks/common/guard-bash.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-bash.sh\" || exit 2" }
         ]
       },
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": "bash .claude/hooks/common/guard-edit.sh" } ]
+        "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-edit.sh\" || exit 2" } ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": "bash .claude/hooks/post-edit.sh" } ]
+        "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit.sh\"" } ]
       }
     ]
   }

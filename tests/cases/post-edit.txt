@@ -1,0 +1,25 @@
+# post-edit.sh（ファイル編集後のフック）の注意喚起の試験表
+#
+# 書式：  パターン  パス  期待する文言
+#   パターン web / mobile-flutter / desktop-mac / desktop-windows-wpf
+#   パス     プロジェクトルートからの相対パス（試験時に空ファイルを作る）
+#   文言     additionalContext に含まれるはずの文字列。- なら「何も出さない」
+#
+# フォーマッタや lint を呼ぶ分岐（.go / .ts / .dart / .swift / .cs）は、道具が入っていないと
+# 回せないのでここでは試さない。注意喚起がエージェントに届く形で出ているかだけを見る。
+
+web api/db/queries/example.sql task gen
+web api/db/migrations/00002_add_users.sql task migrate:up
+web openapi/openapi.yaml task gen
+web README.md -
+web api/internal/generated/db/models.go -
+
+mobile-flutter openapi/openapi.yaml make gen
+mobile-flutter README.md -
+mobile-flutter lib/generated/api.dart -
+
+desktop-mac App/App.entitlements Confirm with the user
+desktop-mac README.md -
+
+desktop-windows-wpf README.md -
+desktop-windows-wpf src/MyApp.Domain/Data/Migrations/20260101000000_Init.cs -

@@ -80,6 +80,7 @@ task check    # web。mobile / mac / windows は make check
 - エージェントが同じ間違いを 2 回したら、それはハーネスに足す材料
   - 指示で直るもの → パターンの `CLAUDE.md` の「間違えやすい点」に 1 行足す。このリポジトリにも反映して次のプロジェクトに効かせる
   - 指示しても繰り返すもの → フックか lint ルールにして機械的に止める
+- フックを変えたら `bash tests/run.sh` を回す。ガードの穴や誤検知を見つけたら、直す前に `tests/cases/*.txt` に 1 行足す（期待・パターン・コマンドを並べるだけ）
 - 一度も引っかからないルールは削る。CLAUDE.md は短いほど効く
 - 禁止だけ書くと、無いときにまた直書きされる。「無ければどこに新設して使うか」まで書く（`common/CLAUDE.md`「唯一の定義場所」）
 - 契約文書や相手側リポジトリの更新漏れは原則では防げない。PR 前のチェックリスト（完了の定義）に足す
@@ -101,14 +102,19 @@ task check    # web。mobile / mac / windows は make check
 ### テンプレートの状態
 
 - **template/ のコードは実ビルドで検証していない。** 生成コード（oapi-codegen、sqlc、orval、freezed、riverpod_generator 等）が存在する前提で書いてあり、初回 scaffold で `gen` を回したときに生成される型名・引数名との細かいズレが出る可能性がある。最初のプロジェクトで潰し、直したものをこのリポジトリに反映する
+- **フックは試験している。** `bash tests/run.sh` が各パターンを一時ディレクトリに組み立て、macOS 標準の bash 3.2 と新しい bash の両方でガードを回す。Windows の Git Bash 上と、フォーマッタ・lint を呼ぶ分岐（道具が要る）は未検証
 - `package.json` / `pubspec.yaml` / `Directory.Packages.props` のバージョンは「意図のメモ」。scaffold 時にパッケージマネージャに解決させ、ロックファイルを正とする
 - Go の module path（`github.com/ORG/APP/api`）、Swift / .NET の `MyApp`、Flutter の `my_app` はプレースホルダ。scaffold 時に一括置換する
 
 ### フックと権限
 
 - 防御は **二重**：`permissions.deny`（コマンド名の前方一致）と `guard-bash.sh`（正規表現）。片方だけだと引数順の違い（`git push origin main --force`）で抜ける。パターン固有の追加は `extra-deny.txt` に正規表現で書く
-- `rm -rf` はリポジトリルート・ホーム・`/`・`..` 相当だけブロックしている。`rm -rf ./build` は通る。もっと厳しくしたいなら `guard-bash.sh` の `COMMON_DENY` を足す
+- `rm` はリポジトリルート（`.`）・親（`..`）・ホーム（`~`、`$HOME`）・`/` と、その直下すべて（`./*` など）、裸の `*` をブロックしている。`rm -rf ./build` は通る。もっと厳しくしたいなら `guard-bash.sh` の `PATTERNS` を足す
 - フックは **コマンド文字列を見ているだけ** で、スクリプトファイルの中身や Makefile のターゲットの中までは追えない。`make deploy` のようなターゲットを作るなら、それ自体を `extra-deny.txt` に足す
+- フックは善意のエージェントの事故を防ぐ **ガードレールで、越えられない境界ではない**（`bash -c '...'` のような書き方は見ない）。境界が要るもの（本番への到達、強制 push）は、認証情報を持たせない・ブランチ保護をかけるなど権限側で作る
+- 逆に、操作に触れているだけの文字列（`cdk deploy` と書いたコミットメッセージ、検索パターン）でも止まる。止まったら文言を変えるかファイルに書く
+- ガードは **動けないときは止める**。スクリプトが無い・途中で落ちた・入力が読めない場合は素通しにせずブロックする。セットアップを誤ると全コマンドが止まるので、すぐ気づける
+- フックを書くときの決まり（呼び出しパス、終了コード、エージェントへの伝え方）は [`common/README.md`](common/README.md)「フックを書くときの決まり」
 - `permissions.allow` に `powershell:*` / `pwsh:*`（Windows）を入れている。PowerShell 経由なら何でも実行できるので、気になるなら外して個別に許可する
 - `post-edit.sh` で `go vet` や `dotnet build` をファイル単位で回している。大きなプロジェクトで遅くなったら、フックは format だけにして検査は `check` に寄せる
 
@@ -120,6 +126,7 @@ task check    # web。mobile / mac / windows は make check
 ### 秘密情報
 
 - `.env`、鍵、証明書、provisioning profile はエージェントが読めないよう `permissions.deny` に入れている。ローカル開発用の値は `docker-compose.yml` や `.env.example` に直書きしてよいが、本番値は SSM / Secrets Manager / Keychain に置く
+- `.env.example` だけは見本なので読み書きできる（`permissions.deny` の `Read(!.env.example)` と `guard-edit.sh` の両方で通している）。`.env.local` など他の `.env.*` は止まる
 - `guard-bash.sh` は AWS アクセスキーや秘密鍵らしき文字列を含むコマンドをブロックするが、網羅的ではない。秘密情報をコマンドラインに乗せない運用が前提
 
 ### 破壊的操作は人間が叩く

@@ -31,7 +31,7 @@
       "Bash(signtool:*)",
       "Bash(msstore:*)",
       "Bash(sudo:*)",
-      "Read(**/*.pfx)", "Read(**/*.p12)", "Read(**/*.snk)", "Read(.env)", "Read(.env.*)",
+      "Read(**/*.pfx)", "Read(**/*.p12)", "Read(**/*.snk)", "Read(.env)", "Read(.env.*)", "Read(!.env.example)",
       "Read(**/appsettings.Production.json)"
     ]
   },
@@ -40,18 +40,21 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "EXTRA_DENY=$(cat .claude/hooks/extra-deny.txt 2>/dev/null) bash .claude/hooks/common/guard-bash.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-bash.sh\" || exit 2" }
         ]
       },
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": "bash .claude/hooks/guard-edit-wpf.sh && bash .claude/hooks/common/guard-edit.sh" } ]
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-edit-wpf.sh\" || exit 2" },
+          { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/common/guard-edit.sh\" || exit 2" }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": "bash .claude/hooks/post-edit.sh" } ]
+        "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit.sh\"" } ]
       }
     ]
   }
