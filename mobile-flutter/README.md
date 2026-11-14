@@ -54,7 +54,8 @@ cp -r agent-dev-harness/common/.claude/hooks .claude/hooks/common
 cp agent-dev-harness/common/CLAUDE.md .claude/CLAUDE.common.md
 # pubspec.yaml は template の dependencies を flutter create 生成物にマージする
 flutter pub get
-make gen && make check
+git init    # 生成コードの鮮度の検査（gen-check）が git を使うので、check より先
+make gen && git add -A && make check
 ```
 
 OpenAPI の契約は web プロジェクトの `openapi/openapi.yaml` を参照する（同じモノレポに置くか、別リポなら git submodule / コピー）。`openapi-generator.yaml` の `inputSpec` を合わせる。

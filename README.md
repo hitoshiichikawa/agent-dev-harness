@@ -6,6 +6,8 @@ AI エージェント（主に Claude Code）で開発を進めるための **�
 ハーネス = モデルの周りに置く仕組み全部。「何を知らせるか・何を使わせるか・何を禁じるか・どうやって正しさを確認するか」。
 信頼性はほぼ **検証ループとフック** で決まる。CLAUDE.md は「毎回間違えるから毎回言うこと」だけに絞る。
 
+考え方の全体と、プロジェクトを始める手順は [`docs/guide.md`](docs/guide.md)。まずこれを読む。
+
 このリポジトリがなぜこの形で、どこへ向かうか（継承の構造、IF による分割、リポジトリの分け方、人が確認する場所、知見の入れ方）は [`docs/design.md`](docs/design.md)。
 
 ## パターン一覧
@@ -49,8 +51,10 @@ cp -r ../agent-dev-harness/common/.claude/hooks    .claude/hooks/common
 #   pnpm create vite / flutter create / xcodegen / dotnet restore など。
 #   template/ は設定・構造・最小コードだけを持ち、アプリ本体は各ツールの scaffold で作る
 
-# 完了条件が通ることを確認してから git init
-task check    # web。mobile / mac / windows は make check
+# git を始めてから完了条件を通す。生成コードの鮮度の検査が git を使うので、git init が先。
+# 生成コードは git add してから check する（追跡していないと、検査が差分を見られず素通りする）
+git init
+task gen && git add -A && task check    # web。mobile / mac は make gen && git add -A && make check、windows は git add -A && make check
 
 # CLAUDE.md 末尾の「プロジェクト固有」節を埋める（ここだけが毎プロジェクト書く場所）
 ```
@@ -80,6 +84,7 @@ task check    # web。mobile / mac / windows は make check
 
 ### 3. ハーネス自体の育て方
 
+- 知見と失敗は、まず [`docs/learnings.md`](docs/learnings.md) に 1 件ずつ記録し、行き先を決めてから反映する。プロジェクト側では `docs/harness-feedback.md` に書き留める
 - エージェントが同じ間違いを 2 回したら、それはハーネスに足す材料
   - 指示で直るもの → パターンの `CLAUDE.md` の「間違えやすい点」に 1 行足す。このリポジトリにも反映して次のプロジェクトに効かせる
   - 指示しても繰り返すもの → フックか lint ルールにして機械的に止める

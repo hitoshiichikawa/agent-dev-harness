@@ -70,7 +70,8 @@ cd api && go mod init github.com/<org>/my-app/api && go get github.com/jackc/pgx
 # infra
 cd infra && pnpm add aws-cdk-lib constructs && pnpm add -D aws-cdk && cd ..
 
-task gen && task check
+git init    # 生成コードの鮮度の検査（check:gen）が git を使うので、check より先
+task gen && git add -A && task check
 ```
 
 ## 検証ループ
