@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ハーネスのフックを試験する。
+# ハーネスのフックと、初期プロンプト（各パターンの CLAUDE.md）の欄を試験する。
 #
 #   bash tests/run.sh
 #
@@ -300,6 +300,103 @@ run_all() { # $1=試す bash のパス
   echo "   $((PASS - before)) ok"
 }
 
+# 初期プロンプト（各パターンの CLAUDE.md）が docs/design.md 2 章の欄を同じ並びで持ち、短く保たれていること。
+# フックと違って bash の版に依らないので 1 回だけ回す。
+TYPE_SECTIONS='責任範囲と境界
+実行環境と前提
+コマンド
+人間だけが叩く操作
+構成と依存方向
+手本と追加手順
+唯一の定義場所
+使わないもの
+テスト
+止まって確認する判断
+互換性の制約
+確認手段と証拠
+プロジェクト固有'
+PROJECT_FIELDS='目的と利用者
+ドメイン用語
+主要
+破ってはならない業務ルール
+契約の段階
+外部連携
+環境（
+外に出ている版
+触ってはいけない場所
+依頼の入口'
+PROMPT_MAX_LINES=200 # パターンの CLAUDE.md と基底の合計。これ未満
+
+# paths のグロブを正規表現に直す。Claude Code の照合そのものではなく、書き間違いを見つけるための近似
+glob_to_regex() {
+  local re
+  re="$(printf '%s' "$1" | sed -e 's/\./\\./g' -e 's#\*\*/#@@#g' -e 's#\*#[^/]*#g' -e 's#@@#(.*/)?#g' -e 's/{/(/g' -e 's/}/)/g' -e 's/,/|/g')"
+  case "$1" in */*) printf '^%s$' "$re" ;; *) printf '^(.*/)?%s$' "$re" ;; esac
+}
+
+# ルールの frontmatter から paths の各パターンを 1 行ずつ出す
+rule_paths() { awk 'NR > 1 && /^---$/ { exit } /^[[:space:]]*- / { sub(/^[[:space:]]*- /, ""); gsub(/"/, ""); print }' "$1"; }
+
+prompt_cases() {
+  SH_LABEL="prompt"
+  local p file got field line i n rule name pattern re before=$PASS common_lines
+  common_lines="$(wc -l <"$ROOT/common/CLAUDE.md")"
+  echo "== 初期プロンプト"
+  for p in web mobile-flutter desktop-mac desktop-windows-wpf; do
+    file="$ROOT/$p/CLAUDE.md"
+    : >"$WORK/stderr"
+
+    # 欄の並び。見出しの後ろの括弧書きは見ない
+    got="$(grep '^## ' "$file" | sed -e 's/^## //' -e 's/（.*//')"
+    if [ "$got" = "$TYPE_SECTIONS" ]; then ok; else
+      ng "$p: CLAUDE.md の欄が design.md 2 章の一覧と違う"
+      diff <(printf '%s\n' "$TYPE_SECTIONS") <(printf '%s\n' "$got") | sed 's/^/       /'
+    fi
+
+    # 中身の無い欄が無いこと（当てはまらない欄は消さずに「該当なし」と書く）
+    got="$(awk '/^## /{ if (h != "" && n == 0) print h; h = $0; n = 0; next } NF { n++ } END { if (h != "" && n == 0) print h }' "$file")"
+    if [ -z "$got" ]; then ok; else ng "$p: 中身の無い欄がある: $got"; fi
+
+    # プロジェクトが埋める欄。先頭の 10 個が共通の並び
+    got="$(awk '/^## プロジェクト固有/{ f = 1; next } f && /^- /' "$file")"
+    i=0
+    while IFS= read -r field; do
+      i=$((i + 1))
+      line="$(printf '%s\n' "$got" | sed -n "${i}p")"
+      case "$line" in "- $field"*) ok ;; *) ng "$p: プロジェクト固有の $i 番目が「${field}」で始まっていない: $line" ;; esac
+    done <<EOF
+$PROJECT_FIELDS
+EOF
+
+    # 基底と合わせた行数。@ で取り込んでも読み込み量は減らないので合計で見る
+    n=$(($(wc -l <"$file") + common_lines))
+    if [ "$n" -lt "$PROMPT_MAX_LINES" ]; then ok; else
+      ng "$p: CLAUDE.md と基底の合計が $n 行（$PROMPT_MAX_LINES 行未満にする。足すなら削るか .claude/rules/ に移す）"
+    fi
+
+    # パス付きルール。paths が無いと毎回読まれ、CLAUDE.md を短くした意味が無くなる
+    for rule in "$ROOT/$p/.claude/rules"/*.md; do
+      [ -f "$rule" ] || continue
+      name="$(basename "$rule")"
+      if [ "$(head -1 "$rule")" = "---" ] && [ -n "$(rule_paths "$rule")" ] && grep -q '^paths:' "$rule"; then ok; else
+        ng "$p: rules/$name の先頭に paths が無い"
+        continue
+      fi
+      if grep -Fq "\`$name\`" "$file"; then ok; else ng "$p: rules/$name が CLAUDE.md から名指しされていない"; fi
+      # 各パターンが、雛形のどれかのファイルに当たること
+      while IFS= read -r pattern; do
+        re="$(glob_to_regex "$pattern")"
+        if (cd "$ROOT/$p/template" && find . -type f | sed 's#^\./##' | grep -Eq "$re"); then ok; else
+          ng "$p: rules/$name の paths「${pattern}」が雛形のどのファイルにも当たらない"
+        fi
+      done <<EOF
+$(rule_paths "$rule")
+EOF
+    done
+  done
+  echo "   $((PASS - before)) ok"
+}
+
 seen=""
 for sh in /bin/bash "$(command -v bash)"; do
   [ -x "$sh" ] || continue
@@ -308,6 +405,8 @@ for sh in /bin/bash "$(command -v bash)"; do
   seen="$seen $v"
   run_all "$sh"
 done
+
+prompt_cases
 
 echo
 echo "passed: $PASS  failed: $FAIL"
