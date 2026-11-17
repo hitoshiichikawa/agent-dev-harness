@@ -241,6 +241,8 @@ template_cases() {
     : >"$WORK/stderr"
     if grep -q 'check-gate\.sh record' "$file"; then ok; else ng "template, $p: check が check-gate.sh record を呼んでいない"; fi
     if grep -Fq "gate '$label'" "$BASE/$p/.hooks-Stop-All"; then ok; else ng "template, $p: Stop フックの案内が '$label' になっていない"; fi
+    # 人ごとの設定（既存リポジトリの場所など）がコミットされないこと
+    if grep -Fxq '.claude/settings.local.json' "$ROOT/$p/template/.gitignore"; then ok; else ng "template, $p: .gitignore に .claude/settings.local.json が無い"; fi
   done
 }
 
@@ -394,6 +396,17 @@ $(rule_paths "$rule")
 EOF
     done
   done
+
+  # 既存の隣に作る手順（brownfield.md）。写して使う設定の例が JSON として読め、既存側への Edit を絶対パスで拒否していること
+  : >"$WORK/stderr"
+  got="$(awk '/^```json$/{ f = 1; next } /^```$/{ f = 0 } f' "$ROOT/common/brownfield.md")"
+  if printf '%s' "$got" | jq -e '.permissions.deny | map(select(startswith("Edit(//"))) | length > 0' >/dev/null 2>"$WORK/stderr"; then ok; else
+    ng "brownfield.md: 設定の例が JSON として読めないか、Edit(//...) の拒否ルールが無い"
+  fi
+  # 基底が指す先は、プロジェクトに置いた後の場所であること
+  if grep -Fq '`docs/brownfield.md`' "$ROOT/common/CLAUDE.md" && grep -Fq 'docs/brownfield.md' "$ROOT/common/brownfield.md"; then ok; else
+    ng "common/CLAUDE.md か brownfield.md が、プロジェクト内の置き場所 docs/brownfield.md を指していない"
+  fi
   echo "   $((PASS - before)) ok"
 }
 
