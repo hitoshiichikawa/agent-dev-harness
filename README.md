@@ -65,7 +65,8 @@ task gen && git add -A && task check    # web。mobile / mac は make gen && git
 
 | 仕組み | 何が起きるか |
 |---|---|
-| `CLAUDE.md` | 毎セッション冒頭で読まれる。コマンド・構成・依存方向・間違えやすい点を知った状態で始まる |
+| `CLAUDE.md` | 毎セッション冒頭で読まれる。責任範囲・コマンド・構成・依存方向・定義の置き場所を知った状態で始まる。欄は全パターン共通（[`docs/design.md`](docs/design.md) 2 章） |
+| `.claude/rules/` | ファイルごとの書き方。該当するファイルを開いたときだけ読まれる |
 | `permissions.allow` | `task check` や `go test` は確認なしで実行される。毎回承認しなくていい |
 | `permissions.deny` + `guard-bash.sh` | `cdk deploy`、`goose up`、`git push --force` などを叩こうとすると止まり、「人間に依頼して」とフィードバックが返る |
 | `guard-edit.sh` | 生成コード・`.env`・ロックファイル・`.xcodeproj` を書き換えようとすると止まる |
@@ -86,7 +87,7 @@ task gen && git add -A && task check    # web。mobile / mac は make gen && git
 
 - 知見と失敗は、まず [`docs/learnings.md`](docs/learnings.md) に 1 件ずつ記録し、行き先を決めてから反映する。プロジェクト側では `docs/harness-feedback.md` に書き留める
 - エージェントが同じ間違いを 2 回したら、それはハーネスに足す材料
-  - 指示で直るもの → パターンの `CLAUDE.md` の「間違えやすい点」に 1 行足す。このリポジトリにも反映して次のプロジェクトに効かせる
+  - 指示で直るもの → パターンの `CLAUDE.md` の該当する欄か、`.claude/rules/` に 1 行足す。基底と合わせて 200 行未満を保ち、足すなら削る。このリポジトリにも反映して次のプロジェクトに効かせる
   - 指示しても繰り返すもの → フックか lint ルールにして機械的に止める
 - フックを変えたら `bash tests/run.sh` を回す。ガードの穴や誤検知を見つけたら、直す前に `tests/cases/*.txt` に 1 行足す（期待・パターン・コマンドを並べるだけ）
 - 一度も引っかからないルールは削る。CLAUDE.md は短いほど効く

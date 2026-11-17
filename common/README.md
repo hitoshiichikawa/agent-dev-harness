@@ -2,7 +2,7 @@
 
 | ファイル | 役割 |
 |---|---|
-| `CLAUDE.md` | 作業手順、完了の定義、確認を取る判断、禁止事項、Git 運用。全プロジェクトで同じ |
+| `CLAUDE.md` | 作業手順、完了の定義、確認を取る判断、禁止事項、Git 運用。全プロジェクトで同じ。各パターンの `CLAUDE.md` が埋める欄の一覧は [`docs/design.md`](../docs/design.md) 2 章 |
 | `.claude/settings.json` | 権限の許可/拒否とフック定義の基底。各パターンの settings.json はこれを含んだ完全版 |
 | `.claude/hooks/guard-bash.sh` | Bash 実行前に破壊的・本番向けコマンドをブロック。パターン固有の追加は `.claude/hooks/extra-deny.txt` に 1 行 1 正規表現で書く（スクリプトが自分で読む） |
 | `.claude/hooks/guard-edit.sh` | 生成コード・秘密情報・ロックファイル・`.xcodeproj` への直接編集をブロック |
