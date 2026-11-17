@@ -10,3 +10,5 @@ android/key.properties
 .env*
 # 生成コード（lib/generated, *.g.dart, *.freezed.dart）は意図的にコミットする。
 # `make gen-check` が「生成し忘れ」を git diff で検出するため。
+# 人ごとの設定（既存リポジトリの場所など）。コミットしない
+.claude/settings.local.json
