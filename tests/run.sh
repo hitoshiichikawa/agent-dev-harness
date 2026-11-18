@@ -157,6 +157,77 @@ fail_closed_cases() {
   expect_rc block $? "extra-deny.txt が CRLF"
   bash_input "ls -la" | run_hook "$proj" PreToolUse Bash >/dev/null
   expect_rc allow $? "extra-deny.txt が CRLF でも無関係なコマンドは通る"
+
+  # 編集ガードのプロジェクト固有の追加（extra-deny-paths.txt）。後から導入した既存リポジトリは、
+  # 生成コードが generated/ 以外にあるので、ここで守る場所を足す
+  for p in common web; do
+    proj="$BASE/paths-$p"
+    cp -R "$BASE/$p" "$proj"
+    printf '# 生成コード\r\n\r\n(^|/)src/lib/data/(func|table)/\r\n' >"$proj/.claude/hooks/extra-deny-paths.txt"
+    edit_input "$proj/src/lib/data/func/f_get.ts" | run_hook "$proj" PreToolUse Edit >/dev/null
+    expect_rc block $? "$p: extra-deny-paths.txt に足した場所"
+    edit_input "$proj/src/lib/data/api/handler.ts" | run_hook "$proj" PreToolUse Edit >/dev/null
+    expect_rc allow $? "$p: extra-deny-paths.txt に無い場所"
+    edit_input "$proj/src/generated/x.ts" | run_hook "$proj" PreToolUse Edit >/dev/null
+    expect_rc block $? "$p: extra-deny-paths.txt があっても基底の対象は止まる"
+    printf '%s\n' 'foo(' >>"$proj/.claude/hooks/extra-deny-paths.txt"
+    edit_input "$proj/README.md" | run_hook "$proj" PreToolUse Edit >/dev/null
+    expect_rc block $? "$p: extra-deny-paths.txt の正規表現が壊れている"
+  done
+}
+
+# 歯止め（ratchet.sh）。書き留めた違反の数と今の数が一致するときだけ通ること
+ratchet_expect() { # $1=pass|fail $2=プロジェクト $3=説明 [$4=出力に含まれるはずの文字列]
+  local out rc got
+  out="$(cd "$2/elsewhere" && CLAUDE_PROJECT_DIR="$2" "$SH" "$2/.claude/hooks/common/ratchet.sh" 2>&1)"
+  rc=$?
+  : >"$WORK/stderr"
+  if [ "$rc" -eq 0 ]; then got=pass; elif [ "$rc" -eq 1 ]; then got=fail; else got="rc=$rc"; fi
+  if [ "$got" != "$1" ]; then ng "ratchet, $3: expected $1, got $got: $out"
+  elif [ -n "${4:-}" ] && ! printf '%s' "$out" | grep -Fq -- "$4"; then ng "ratchet, $3: 出力に '$4' が無い: $out"
+  else ok; fi
+}
+
+ratchet_cases() {
+  local proj="$BASE/ratchet"
+  cp -R "$BASE/common" "$proj"
+  mkdir -p "$proj/src/cmd" "$proj/src/lib"
+  printf 'a = queryRaw(1)\nb = queryRaw(2); c = queryRaw(3)\n' >"$proj/src/cmd/one.ts"
+  printf 'x = queryRaw(9)\n' >"$proj/src/lib/ok.ts"
+
+  ratchet_expect pass "$proj" "ratchet.txt が無ければ何もしない"
+  printf '# 数 名前 パス 正規表現\r\n\r\n3 raw-sql src/cmd queryRaw\r\n' >"$proj/.claude/ratchet.txt"
+  ratchet_expect fail "$proj" "git リポジトリでない" "not a git repository"
+
+  (cd "$proj" && scratch_git init -q && scratch_git add -A && scratch_git commit -q -m init) >/dev/null 2>"$WORK/stderr" ||
+    { ng "ratchet: 試験用リポジトリを作れない"; return; }
+  ratchet_expect pass "$proj" "数が一致（1 行に 2 箇所あれば 2 と数える。CRLF とコメント行も読める）" "1 item(s)"
+
+  # 新しい未追跡ファイルに違反を足しても数える
+  printf 'd = queryRaw(4)\n' >"$proj/src/cmd/two.ts"
+  ratchet_expect fail "$proj" "未追跡ファイルで増えた" "3 -> 4"
+  printf 'd = 4\n' >"$proj/src/cmd/two.ts"
+  ratchet_expect pass "$proj" "元に戻した"
+
+  # 減ったときも落として、書き留めた数を下げさせる
+  printf 'a = queryRaw(1)\n' >"$proj/src/cmd/one.ts"
+  ratchet_expect fail "$proj" "減った" "to 1"
+  printf '1 raw-sql src/cmd queryRaw\n' >"$proj/.claude/ratchet.txt"
+  ratchet_expect pass "$proj" "数を下げた"
+
+  # 空白を含む正規表現は行末までを 1 つとして読む
+  printf '1 raw-sql src/cmd queryRaw\n1 assign src/cmd a = query\n' >"$proj/.claude/ratchet.txt"
+  ratchet_expect pass "$proj" "空白を含む正規表現" "2 item(s)"
+
+  # 読めない行・無いパス・壊れた正規表現は、読み飛ばさずに落とす
+  printf 'x raw-sql src/cmd queryRaw\n' >"$proj/.claude/ratchet.txt"
+  ratchet_expect fail "$proj" "数が数字でない" "cannot read line"
+  printf '1 raw-sql src/cmd\n' >"$proj/.claude/ratchet.txt"
+  ratchet_expect fail "$proj" "正規表現が無い" "cannot read line"
+  printf '1 raw-sql src/nowhere queryRaw\n' >"$proj/.claude/ratchet.txt"
+  ratchet_expect fail "$proj" "パスが無い" "does not exist"
+  printf '0 broken src/cmd foo(\n' >"$proj/.claude/ratchet.txt"
+  ratchet_expect fail "$proj" "正規表現が壊れている" "invalid regex"
 }
 
 # check の門番（check-gate.sh）。変更したのに check を通していないまま終わるのを止めること。
@@ -297,6 +368,7 @@ run_all() { # $1=試す bash のパス
   guard_cases edit "$CASES/guard-edit.txt"
   post_edit_cases "$CASES/post-edit.txt"
   fail_closed_cases
+  ratchet_cases
   gate_cases
   template_cases
   echo "   $((PASS - before)) ok"
@@ -396,6 +468,30 @@ $(rule_paths "$rule")
 EOF
     done
   done
+
+  # 後付け導入の下敷き（retrofit/CLAUDE.md）。タイプと同じ欄を同じ並びで持ち、空の欄が無いこと
+  file="$ROOT/common/retrofit/CLAUDE.md"
+  : >"$WORK/stderr"
+  got="$(grep '^## ' "$file" | sed -e 's/^## //' -e 's/（.*//')"
+  if [ "$got" = "$TYPE_SECTIONS" ]; then ok; else
+    ng "retrofit/CLAUDE.md の欄が design.md 2 章の一覧と違う"
+    diff <(printf '%s\n' "$TYPE_SECTIONS") <(printf '%s\n' "$got") | sed 's/^/       /'
+  fi
+  got="$(awk '/^## /{ if (h != "" && n == 0) print h; h = $0; n = 0; next } NF { n++ } END { if (h != "" && n == 0) print h }' "$file")"
+  if [ -z "$got" ]; then ok; else ng "retrofit/CLAUDE.md: 中身の無い欄がある: $got"; fi
+  got="$(awk '/^## プロジェクト固有/{ f = 1; next } f && /^- /' "$file")"
+  i=0
+  while IFS= read -r field; do
+    i=$((i + 1))
+    line="$(printf '%s\n' "$got" | sed -n "${i}p")"
+    case "$line" in "- $field"*) ok ;; *) ng "retrofit/CLAUDE.md: プロジェクト固有の $i 番目が「${field}」で始まっていない: $line" ;; esac
+  done <<EOF
+$PROJECT_FIELDS
+EOF
+  # 後付けでは基底と流儀が食い違いうるので、優先の決まりと、歯止めの数を上げるときの確認を下敷きが持つこと
+  if grep -Fq '基底より優先する決まり' "$file" && grep -Fq 'ratchet.txt' "$file"; then ok; else
+    ng "retrofit/CLAUDE.md に「基底より優先する決まり」か ratchet.txt への言及が無い"
+  fi
 
   # 既存の隣に作る手順（brownfield.md）。写して使う設定の例が JSON として読め、既存側への Edit を絶対パスで拒否していること
   : >"$WORK/stderr"

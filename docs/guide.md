@@ -90,6 +90,8 @@ mac と Windows のタイプは、その OS のローカルで Claude Code を�
 **リポジトリをいくつにするか。** リリースの周期が同じものは同じリポジトリに、違うものは分ける。API と Web フロントは同居、モバイルは別にする。
 分けたときに契約をどこに置くかは、契約を使うリポジトリの数で決まる（[`design.md`](design.md) 4 章の段階表）。
 
+**すでにあるリポジトリの中で開発を続けるか。** ハーネス無しで作ってきたリポジトリに後から入れる場合は、この先の手順ではなく [`common/retrofit.md`](../common/retrofit.md) の手順を使う。雛形は使わず、基底だけを置く。`check` は今すでに通る検査だけで始め、既存の違反は数を書き留めて増やさない形で凍結する。
+
 **既存システムの隣に作るか。** そうなら、[`common/brownfield.md`](../common/brownfield.md) の手順をこの先の手順に重ねる。エージェントは既存の壊れ方まで真似るので、置き方と読ませ方を先に決める。
 
 - 新しいリポジトリは、既存リポジトリの中ではなく兄弟ディレクトリに置く。`claude` は新しい側のルートで起動する
@@ -272,5 +274,7 @@ printf '{"tool_input":{"file_path":"%s/.env"}}' "$PWD" | CLAUDE_PROJECT_DIR="$PW
 | [`design.md`](design.md) | 方針の詳細。継承の構造、IF とリポジトリの分け方、Claude Code の仕様から来る制約、方針と現状の差、決めていないこと |
 | [`learnings.md`](learnings.md) | 知見の記録と、その書式・流れ |
 | [`common/README.md`](../common/README.md) | 基底の中身と、フックを書くときの決まり |
+| [`common/retrofit.md`](../common/retrofit.md) | ハーネス無しで作ってきたリポジトリに、後から入れるときの手順。今の状態の測り方、`check` の作り方、歯止め、`CLAUDE.md` の組み直し |
+| [`trials/`](trials/) | 実際のリポジトリに適用したときの実行の記録 |
 | [`common/brownfield.md`](../common/brownfield.md) | 既存システムの隣に作るときの手順。置き方、既存側を書き換えさせない設定、測り方、`CLAUDE.md` の埋め方、既存側が変わったときの追随 |
 | 各パターンの `README.md` | そのタイプの決定事項、見送った理由、scaffold 手順、間違えやすい点 |
