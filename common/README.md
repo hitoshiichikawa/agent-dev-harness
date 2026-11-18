@@ -5,7 +5,10 @@
 | `CLAUDE.md` | 作業手順、完了の定義、確認を取る判断、禁止事項、Git 運用。全プロジェクトで同じ。各パターンの `CLAUDE.md` が埋める欄の一覧は [`docs/design.md`](../docs/design.md) 2 章 |
 | `.claude/settings.json` | 権限の許可/拒否とフック定義の基底。各パターンの settings.json はこれを含んだ完全版 |
 | `.claude/hooks/guard-bash.sh` | Bash 実行前に破壊的・本番向けコマンドをブロック。パターン固有の追加は `.claude/hooks/extra-deny.txt` に 1 行 1 正規表現で書く（スクリプトが自分で読む） |
-| `.claude/hooks/guard-edit.sh` | 生成コード・秘密情報・ロックファイル・`.xcodeproj` への直接編集をブロック |
+| `.claude/hooks/guard-edit.sh` | 生成コード・秘密情報・ロックファイル・`.xcodeproj` への直接編集をブロック。プロジェクト固有の追加は `.claude/hooks/extra-deny-paths.txt` に 1 行 1 正規表現で書く（スクリプトが自分で読む） |
+| `.claude/hooks/ratchet.sh` | 歯止め。`.claude/ratchet.txt` に書き留めた違反の数と、今の数が一致することを確かめる。増えても減っても落ちる。`check` コマンドの中から呼ぶ。後付け導入で使う |
+| `retrofit.md` | ハーネス無しで作ってきたリポジトリに、後から入れるときの手順 |
+| `retrofit/CLAUDE.md` | 後付け導入で使う `CLAUDE.md` の下敷き。タイプを持たないので、12 欄をプロジェクトが自分で埋める |
 | `.claude/hooks/check-gate.sh` | check の門番。ファイルを編集したのに `check` を通していないまま終わるのを止める（Stop フック）。各パターンの `check` コマンドの最後が「通った」を記録する |
 | `brownfield.md` | 既存システムの隣に作るときの手順。置き方（兄弟ディレクトリ、参照専用の clone）、既存側を書き換えさせない設定、評価手順（コピー・レイヤ違反・時刻変換の測り方）と、新しいコードに課す「唯一の定義場所」の規約 |
 
