@@ -103,7 +103,7 @@
 
 `fms-local-server` 側。
 
-- 変更はブランチ `feature/harness-retrofit` に 1 コミット（`7fbfbb7`）で入れた。push と PR はまだで、`main` には入っていない。ハーネスが効くのは、このブランチを取り出した場所で `claude` を起動したときだけ
+- 変更はブランチ `feature/harness-retrofit` に 1 コミット（`7fbfbb7`）で入れ、[PR](https://github.com/hitoshiichikawa/fms-local-server/pull/79) にした。マージされるまで、ハーネスが効くのはこのブランチを取り出した場所で `claude` を起動したときだけ
 - 単体テストの受け皿が無い。置き場所と走らせ方を決める必要がある
 - 通し確認（Docker が要る）は `make check` に入っていない
 - 検証サーバーへの反映を、エージェントにさせるか人が叩くかは決めていない。今は「止まって確認する判断」に入れただけで、止めてはいない
